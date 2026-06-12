@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Attendance System</title>
+</head>
+<body>
+
+<h3>📷 QR Scanner</h3>
+
+<div id="qr-reader" style="width:300px;"></div>
+
+<p id="qr-status">Waiting for QR...</p>
+
+<h2>📱 Attendance System</h2>
+
+<video id="video" autoplay></video>
+<br>
+
+<button onclick="captureFace()">📸 Scan Face</button>
+<button onclick="scanQR()">📷 Scan QR</button>
+<button onclick="verify()">✔ Verify</button>
+
+<p id="status"></p>
+
+<script>
+let video = document.getElementById("video");
+let face_id = null;
+let qr_id = null;
+
+// CAMERA
+const video = document.getElementById("video");
+
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: "environment"
+        }
+    })
+    .then(stream => {
+        video.srcObject = stream;
+        video.play();
+    })
+    .catch(err => {
+        alert("Camera error: " + err);
+    });
+}
+
+window.onload = startCamera;
+
+// ================= FACE =================
+function captureFace() {
+    let canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    let ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+        let form = new FormData();
+        form.append("image", blob);
+
+        fetch("/api/face", {
+            method: "POST",
+            body: form
+        })
+        .then(res => res.json())
+        .then(data => {
+            face_id = data.face_id;
+            document.getElementById("status").innerText =
+                "Face: " + data.name;
+        });
+    });
+}
+
+// ================= QR (SIMPLIFIED) =================
+let qr_id = null;
+
+function startQRScanner() {
+
+    const qrScanner = new Html5Qrcode("qr-reader");
+
+    Html5Qrcode.getCameras().then(devices => {
+
+        if (devices && devices.length) {
+
+            let cameraId = devices[0].id;
+
+            qrScanner.start(
+                cameraId,
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                (decodedText, decodedResult) => {
+
+                    qr_id = decodedText;
+
+                    document.getElementById("qr-status").innerText =
+                        "QR: " + qr_id;
+
+                    // OPTIONAL: auto stop after scan
+                    qrScanner.stop();
+
+                },
+                (errorMessage) => {
+                    // ignore scan errors
+                }
+            );
+
+        }
+
+    }).catch(err => {
+        console.log("Camera error", err);
+    });
+}
+
+window.onload = function() {
+    startQRScanner();
+};
+
+// ================= VERIFY =================
+function verify() {
+    fetch("/api/verify", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            qr_id: qr_id,
+            face_id: face_id
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("status").innerText =
+            "Result: " + data.status;
+    });
+}
+</script>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+
+</body>
+</html>

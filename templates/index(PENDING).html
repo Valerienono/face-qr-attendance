@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 12px;
+        }
+
+        button {
+            width: 90%;
+            padding: 15px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .btn-blue { background: #2563eb; color: white; }
+        .btn-green { background: #16a34a; color: white; }
+        .btn-purple { background: #7c3aed; color: white; }
+        .btn-red { background: #dc2626; color: white; }
+    </style>
+</head>
+
+<body>
+
+<h2>📊 Attendance System</h2>
+
+<div class="card">
+    <p id="status">Loading dashboard...</p>
+</div>
+
+<button class="btn-green" onclick="location.href='/scan'">
+    📷 Scan QR Attendance
+</button>
+
+<button class="btn-blue" onclick="location.href='/register'">
+    ➕ Register Worker
+</button>
+
+<button class="btn-purple" onclick="loadRecords()">
+    📋 View Records
+</button>
+
+<button class="btn-red" onclick="loadDashboard()">
+    🔄 Refresh Dashboard
+</button>
+
+<div class="card" id="records"></div>
+
+<script>
+
+async function loadDashboard() {
+    let res = await fetch("/api/dashboard");
+    let data = await res.json();
+
+    document.getElementById("status").innerHTML =
+        `Total: ${data.total_workers}<br>
+         Present: ${data.present}<br>
+         Late: ${data.late}<br>
+         Absent: ${data.absent}`;
+}
+
+async function loadRecords() {
+    let res = await fetch("/api/records");
+    let data = await res.json();
+
+    let html = "<h3>Recent Records</h3>";
+
+    data.data.forEach(r => {
+        html += `<p>${r[1]} - ${r[5]} (${r[4]})</p>`;
+    });
+
+    document.getElementById("records").innerHTML = html;
+}
+
+loadDashboard();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Scan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            text-align: center;
+            font-family: Arial;
+        }
+
+        #reader {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .box {
+            margin: 20px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>📷 Scan QR Code</h2>
+
+<div id="reader"></div>
+
+<div class="box" id="result">Waiting...</div>
+
+<script>
+
+let face_id = "";
+
+function onScanSuccess(decodedText) {
+    document.getElementById("result").innerHTML =
+        "QR: " + decodedText;
+
+    // Send QR + Face (simple version)
+    verify(decodedText, face_id);
+}
+
+let scanner = new Html5QrcodeScanner("reader", {
+    fps: 10,
+    qrbox: 250
+});
+
+scanner.render(onScanSuccess);
+
+async function verify(qr, face) {
+    let res = await fetch("/api/verify", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            qr_id: qr,
+            face_id: face || qr   // fallback for demo
+        })
+    });
+
+    let data = await res.json();
+
+    document.getElementById("result").innerHTML =
+        data.success ? "✅ Success: " + data.result : "❌ Failed";
+}
+
+</script>
+
+</body>
+</html>

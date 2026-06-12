@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face QR Attendance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+
+<body>
+
+<h2>📱 Attendance System</h2>
+
+<div class="card">
+    <h3>📷 Face Capture</h3>
+
+    <video id="video" autoplay playsinline style="width:100%;"></video>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <button onclick="startCamera()">Open Camera</button>
+    <button onclick="captureFace()">Capture Face</button>
+</div>
+
+<div class="card">
+    <h3>📦 QR Scanner</h3>
+    <div id="qr-reader" style="width:100%;"></div>
+</div>
+
+<div class="card">
+    <h3>Result</h3>
+    <p id="result">Waiting...</p>
+</div>
+
+<script>
+let stream;
+
+// OPEN CAMERA
+async function startCamera() {
+    try {
+        console.log("Opening camera...");
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" }
+        });
+
+        document.getElementById("video").srcObject = stream;
+
+    } catch (err) {
+        alert("Camera error: " + err.message);
+        console.log(err);
+    }
+}
+
+// CAPTURE FACE
+function captureFace() {
+
+    console.log("Capture clicked");
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(function(blob) {
+
+        const formData = new FormData();
+        formData.append("image", blob, "face.jpg");
+
+        fetch("/api/face", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+            document.getElementById("result").innerText =
+                JSON.stringify(data);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+
+    }, "image/jpeg");
+}
+</script>
+
+</body>
+</html>
