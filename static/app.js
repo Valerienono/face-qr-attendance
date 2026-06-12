@@ -1,72 +1,58 @@
-const video = document.getElementById("video");
+let stream = null;
+let faceId = null;
+let qrId = null;
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(stream => {
+async function startCamera() {
+
+    const video = document.getElementById("video");
+
+    stream = await navigator.mediaDevices.getUserMedia({
+        video:{
+            facingMode:"user"
+        }
+    });
+
     video.srcObject = stream;
-});
+}
 
-function captureFace() {
+async function captureFace() {
+
+    const video = document.getElementById("video");
 
     const canvas = document.createElement("canvas");
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
 
-    canvas.toBlob(blob => {
+    ctx.drawImage(video,0,0);
 
-        let formData = new FormData();
-        formData.append("image", blob);
+    canvas.toBlob(async(blob)=>{
 
-        fetch("/api/face", {
-            method: "POST",
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        const fd = new FormData();
 
-            document.getElementById("result").innerText =
-                "Face: " + JSON.stringify(data);
+        fd.append("image",blob,"face.jpg");
 
+        const res = await fetch("/api/face",{
+            method:"POST",
+            body:fd
         });
 
-    }, "image/jpeg");
+        const data = await res.json();
+
+        if(data.success){
+
+            faceId = data.face_id;
+
+            document.getElementById("result").innerHTML =
+            "✅ Face: " + data.name;
+
+        }else{
+
+            document.getElementById("result").innerHTML =
+            "❌ Face Not Recognized";
+        }
+
+    },"image/jpeg");
 }
-
-let qrScanner = new Html5Qrcode("qr-reader");
-
-qrScanner.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 200 },
-    qrCodeMessage => {
-
-        document.getElementById("result").innerText =
-            "QR: " + qrCodeMessage;
-
-        // OPTIONAL: send to backend
-        window.lastQR = qrCodeMessage;
-    }
-);
-
-function verify(face_id) {
-
-    fetch("/api/verify", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            qr_id: window.lastQR,
-            face_id: face_id
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        document.getElementById("result").innerText =
-            "Verify: " + JSON.stringify(data);
-
-    });
-}
-
