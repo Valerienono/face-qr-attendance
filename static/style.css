@@ -1,30 +1,31 @@
-body {
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
-    text-align: center;
-    margin: 0;
-    padding: 10px;
+body{
+    font-family: Arial, sans-serif;
+    background:#111;
+    color:white;
+    text-align:center;
+    padding:20px;
 }
 
-.card {
-    background: #1e293b;
-    margin: 10px;
-    padding: 15px;
-    border-radius: 10px;
+.card{
+    background:#222;
+    padding:15px;
+    margin:15px 0;
+    border-radius:10px;
 }
 
-video {
-    width: 100%;
-    border-radius: 10px;
+button{
+    width:100%;
+    padding:15px;
+    margin-top:10px;
+    font-size:18px;
 }
 
-button {
-    padding: 10px;
-    margin-top: 10px;
-    width: 100%;
-    background: green;
-    color: white;
-    border: none;
-    border-radius: 8px;
+video{
+    width:100%;
+    border-radius:10px;
+}
+
+#result{
+    font-size:20px;
+    font-weight:bold;
 }
